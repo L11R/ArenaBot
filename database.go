@@ -26,8 +26,8 @@ func InitConnectionPool() {
 	}
 }
 
-func InsertUser(id int) (r.WriteResponse, error) {
-	res, err := r.Table("users").Insert(User{ID: id}, r.InsertOpts{
+func InsertUser(user User) (r.WriteResponse, error) {
+	res, err := r.Table("users").Insert(user, r.InsertOpts{
 		Conflict: "update",
 	}).RunWrite(session)
 	if err != nil {

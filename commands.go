@@ -1,6 +1,10 @@
 package main
 
-import "github.com/go-telegram-bot-api/telegram-bot-api"
+import (
+	"fmt"
+	"github.com/go-telegram-bot-api/telegram-bot-api"
+	"strings"
+)
 
 func StartCommand(update tgbotapi.Update) {
 	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "WIP")
@@ -8,7 +12,12 @@ func StartCommand(update tgbotapi.Update) {
 
 	bot.Send(msg)
 
-	_, err := InsertUser(update.Message.From.ID)
+	_, err := InsertUser(User{
+		ID:        update.Message.From.ID,
+		Username:  update.Message.From.UserName,
+		FirstName: update.Message.From.FirstName,
+		LastName:  update.Message.From.LastName,
+	})
 	if err != nil {
 		log.Warn(err)
 		return
@@ -32,6 +41,9 @@ func DuelCommand(update tgbotapi.Update) {
 	// Update first player info
 	_, err = UpdateUser(User{
 		ID:          update.Message.From.ID,
+		Username:    update.Message.From.UserName,
+		FirstName:   update.Message.From.FirstName,
+		LastName:    update.Message.From.LastName,
 		ActiveFight: Fight{ID: res.GeneratedKeys[0]},
 	})
 	if err != nil {
@@ -42,6 +54,9 @@ func DuelCommand(update tgbotapi.Update) {
 	// Update second player info
 	_, err = UpdateUser(User{
 		ID:          update.Message.ReplyToMessage.From.ID,
+		Username:    update.Message.ReplyToMessage.From.UserName,
+		FirstName:   update.Message.ReplyToMessage.From.FirstName,
+		LastName:    update.Message.ReplyToMessage.From.LastName,
 		ActiveFight: Fight{ID: res.GeneratedKeys[0]},
 	})
 	if err != nil {
@@ -49,7 +64,12 @@ func DuelCommand(update tgbotapi.Update) {
 		return
 	}
 
-	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "<b>Дуэль начинается!</b>")
+	text := fmt.Sprintf(
+		"<b>Дуэль начинается!</b>\n@%s VS @%s",
+		strings.ToUpper(update.Message.From.UserName),
+		strings.ToUpper(update.Message.ReplyToMessage.From.UserName))
+
+	msg := tgbotapi.NewMessage(update.Message.Chat.ID, text)
 	msg.ParseMode = "HTML"
 
 	DuelKeyboard = tgbotapi.NewInlineKeyboardMarkup(
